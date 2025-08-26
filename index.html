@@ -5,12 +5,12 @@
   <title>簡易 URL 縮短器</title>
   <script>
     // ------------------- 自訂映射表 -------------------
-    // 把左邊的代碼（短網址）對應到右邊的長網址
-    // 想再加一個就照範例在最後加逗號，再寫下一行
+    // 把左邊的代碼（短碼）對應到右邊的長網址
     const MAP = {
-      // 例子： /myNotion 會導向下面的 Notion 網址
+      // 您想要的短碼是 "uhavetokown"
       "uhavetokown": "https://www.notion.so/25b90b02047880baaad8cc0075c3453b?source=copy_link"
-      // "anotherCode": "https://example.com/..."
+      // 若要再加入其他短碼，請在最後加上逗號，然後再寫下一行
+      // "otherCode": "https://example.com/..."
     };
 
     // 取得目前網址的路徑（去掉前後斜線）
@@ -20,7 +20,7 @@
     if (MAP[path]) {
       location.replace(MAP[path]);   // 301 重新導向
     } else if (path) {
-      // 沒找到代碼時顯示簡易訊息（可以自行改成 404 頁面）
+      // 沒找到代碼時顯示簡易訊息（可自行改成 404 頁面）
       document.body.innerHTML = `<h2>找不到短網址 <code>${path}</code></h2>`;
     }
   </script>

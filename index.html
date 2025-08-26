@@ -3,27 +3,59 @@
 <head>
   <meta charset="UTF-8">
   <title>簡易 URL 縮短器</title>
+  <style>
+    body {font-family:Helvetica,Arial,sans-serif; margin:2rem;}
+    h1   {color:#2c3e50;}
+    pre  {background:#f4f4f4; padding:0.5rem; border-radius:4px;}
+  </style>
   <script>
-    // ------------------- 自訂映射表 -------------------
-    // 把左邊的代碼（短碼）對應到右邊的長網址
+    /* -------------------------------------------------
+       MAP：短碼 ↔ 長網址 的對應表
+       - 左邊的字串即為「短碼」(只能是英數，大小寫敏感)
+       - 右邊的字串必須是完整的 URL，必須以 http:// 或 https:// 開頭
+       ------------------------------------------------- */
     const MAP = {
-      // 您想要的短碼是 "uhavetokown"
-      "uhavetokown": "https://www.notion.so/25b90b02047880baaad8cc0075c3453b?source=copy_link"
-      // 若要再加入其他短碼，請在最後加上逗號，然後再寫下一行
-      // "otherCode": "https://example.com/..."
+      // 範例：把 Notion 頁面縮成 "uhavetokown"
+      "uhavetokown": "https://www.notion.so/25b90b02047880baaad8cc0075c3453b?source=copy_link",
+
+      // 您可以在這裡自行新增更多映射
+      // "myblog": "https://example.com/blog",
+      // "google": "https://www.google.com"
     };
 
-    // 取得目前網址的路徑（去掉前後斜線）
+    /* -------------------------------------------------
+       主程式 – 依據網址路徑決定行為
+       ------------------------------------------------- */
+    // 取得網址的路徑（去掉開頭與結尾的斜線），例如 "/uhavetokown" → "uhavetokown"
     const path = location.pathname.replace(/^\/|\/$/g, "");
 
-    // 若路徑在 MAP 中，就直接導向
-    if (MAP[path]) {
-      location.replace(MAP[path]);   // 301 重新導向
-    } else if (path) {
-      // 沒找到代碼時顯示簡易訊息（可自行改成 404 頁面）
-      document.body.innerHTML = `<h2>找不到短網址 <code>${path}</code></h2>`;
+    // 有提供短碼 → 嘗試導向
+    if (path) {
+      if (MAP[path]) {
+        // 找到對應的長網址 → 301 永久重新導向
+        location.replace(MAP[path]);
+      } else {
+        // 沒有對應的短碼 → 顯示錯誤訊息（可自行改成 404 頁面）
+        document.body.innerHTML = `
+          <h2>找不到短網址</h2>
+          <p>代碼：<code>${path}</code></p>
+          <p>請確認您在 <code>index.html</code> 的 <code>MAP</code> 中加入了正確的映射。</p>`;
+      }
+    } else {
+      // 直接訪問根網址 → 顯示說明頁面（避免空白）
+      document.body.innerHTML = `
+        <h1>簡易 URL 縮短器</h1>
+        <p>使用方式：在網址後面加入您在 <code>MAP</code> 中設定的短碼，例如：</p>
+        <pre>https://<your‑username>.github.io/<repo‑name>/uhavetokown</pre>
+        <p>會自動跳轉到對應的長網址。</p>
+        <h3>目前已設定的短碼</h3>
+        <ul id="list"></ul>
+        <script>
+          const listEl = document.getElementById('list');
+          for (const code in MAP) {
+            const li = document.createElement('li');
+            li.innerHTML = \`<strong>\${code}</strong> → <a href="\${MAP[code]}" target="_blank">\${MAP[code]}</a>\`;
+            listEl.appendChild(li);
+          }
+        </script>`;
     }
-  </script>
-</head>
-<body></body>
-</html>

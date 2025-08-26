@@ -17,28 +17,53 @@
   <div id="app"><p class="muted">載入中…</p></div>
 
   <script>
-    /* 短碼表：左＝短碼；右＝長網址 */
+    /* ----------------- 1️⃣ 短碼表 ----------------- */
     const MAP = {
-      note: "https://www.notion.so/25b90b02047880baaad8cc0075c3453b?source=copy_link",
-      yt:   "https://youtube.com/"
+      "note": "https://www.notion.so/25b90b02047880baaad8cc0075c3453b?source=copy_link",
+      "yt"  : "https://youtube.com/",
+      // 想再加短碼就直接在這裡寫：
+      // "uhavetokown": "https://example.com/very/long/url"
     };
 
-    /* 解析短碼（支援 user/org pages 與 project pages） */
-    const segs = location.pathname.split("/").filter(Boolean);
+    /* ----------------- 2️⃣ 取得「根路徑」 -----------------
+       - `basePath` 為目前 repo 的子目錄（如果是使用者/組織頁面則為 ""）
+       - 例如：
+         * https://user.github.io/repo/  → basePath = "/repo"
+         * https://user.github.io/       → basePath = ""
+    */
+    const pathParts = location.pathname.split("/").filter(Boolean);   // ["repo","note"] 或 ["note"]
+    const repoName = (function(){
+      // GitHub Pages 會把 repo 名稱放在第一段（若有的話）
+      // 判斷方式：如果第一段不是我們設定的短碼，就把它當作 repoName
+      const possibleRepo = pathParts[0] || "";
+      // 若第一段在 MAP 裡，代表我們直接在根目錄（使用者頁面），回傳空字串
+      return MAP.hasOwnProperty(possibleRepo) ? "" : "/" + possibleRepo;
+    })();   // 例："/finalplan" 或 ""
+
+    /* ----------------- 3️⃣ 解析短碼 -----------------
+       - `code` 只會是最後一段（如果最後一段是空字串，代表首頁）
+    */
     let code = "";
-    if (segs.length === 1) {
-      code = location.pathname.endsWith("/") ? "" : segs[0];   // /finalplan 或 /foo
-    } else if (segs.length >= 2) {
-      code = segs[segs.length - 1];                            // /finalplan/note → note
+    if (pathParts.length === 0) {
+      // 完全根目錄，例如 https://user.github.io/
+      code = "";
+    } else if (pathParts.length === 1) {
+      // 只有一段：可能是「repo」本身或「短碼」；已在 repoName 判斷過，這裡直接取最後一段
+      code = pathParts[0];
+    } else {
+      // 多於兩段，取最後一段作為短碼（例如 /repo/note）
+      code = pathParts[pathParts.length - 1];
     }
 
     const app = document.getElementById("app");
 
+    /* ----------------- 4️⃣ 首頁渲染 ----------------- */
     function renderHome() {
-      const base = `${location.protocol}//${location.host}/finalplan`;
+      // `base` 會自動根據當前 repoName 而變
+      const base = `${location.protocol}//${location.host}${repoName}`;
       app.innerHTML = `
         <h1>簡易 URL 縮短器</h1>
-        <p>在網址後面加你設定的短碼，例如：</p>
+        <p>在網址後面加上你設定的短碼，例如：</p>
         <pre>${base}/note</pre>
         <h3>目前已設定的短碼</h3>
         <ul id="list"></ul>
@@ -48,17 +73,23 @@
       Object.keys(MAP).forEach(k => {
         const li = document.createElement("li");
         const a  = document.createElement("a");
-        a.href = MAP[k]; a.target = "_blank"; a.rel="noopener"; a.textContent = MAP[k];
+        a.href = MAP[k];
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = MAP[k];
         li.innerHTML = `<strong>${k}</strong> → `;
         li.appendChild(a);
         list.appendChild(li);
       });
     }
 
+    /* ----------------- 5️⃣ 主邏輯 ----------------- */
     if (code) {
       if (MAP[code]) {
+        // 找到對應的長網址 → 用 location.replace 直接跳轉
         location.replace(MAP[code]);
       } else {
+        // 找不到 → 顯示錯誤訊息
         app.innerHTML = `
           <h2>找不到短網址</h2>
           <p>代碼：<code>${code}</code></p>
@@ -67,6 +98,7 @@
         `;
       }
     } else {
+      // 沒有短碼 → 顯示說明首頁
       renderHome();
     }
   </script>
